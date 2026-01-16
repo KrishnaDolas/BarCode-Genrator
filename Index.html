@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Excel to Parcel Label</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- QR Code -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-soft: #1d4ed8;
+    --accent: #0ea5e9;
+    --bg-page: #f3f4f6;
+    --bg-card: #ffffff;
+    --border-subtle: rgba(148, 163, 184, 0.5);
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --success: #16a34a;
+  }
+
+  body {
+    background: radial-gradient(circle at top left, #e5edff 0, #f9fafb 35%, #edf2ff 80%);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  .page-wrapper {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding-inline: 16px;
+  }
+
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .app-title {
+    font-size: 1.4rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f172a;
+  }
+
+  .app-title-badge {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e0edff;
+    color: var(--primary-soft);
+    border: 1px solid rgba(37, 99, 235, 0.5);
+  }
+
+  .app-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .card-main {
+    background: radial-gradient(circle at top right, rgba(219, 234, 254, 0.8) 0, #ffffff 40%, #f9fafb 100%);
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    box-shadow:
+      0 18px 40px rgba(15, 23, 42, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.8);
+    overflow: hidden;
+  }
+
+  .card-main .card-body {
+    padding: 20px 20px 18px 20px;
+  }
+
+  .card-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .badge-pill-soft {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    border-radius: 999px;
+    background: #f3f4ff;
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--success);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+  }
+
+  textarea {
+    min-height: 120px;
+    font-size: 13px;
+    background: #f9fafb;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.75);
+    color: var(--text-main);
+    padding: 10px 12px;
+    resize: vertical;
+  }
+
+  textarea::placeholder {
+    color: rgba(156, 163, 175, 1);
+    font-size: 12px;
+  }
+
+  textarea:focus {
+    outline: none;
+    box-shadow:
+      0 0 0 1px rgba(37, 99, 235, 0.5),
+      0 0 0 6px rgba(191, 219, 254, 0.9);
+    border-color: rgba(59, 130, 246, 0.95);
+    background: #ffffff;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), #4f46e5);
+    border: none;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    padding-inline: 18px;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #4338ca);
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.45);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    border: none;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    padding-inline: 18px;
+    box-shadow: 0 10px 25px rgba(34, 197, 94, 0.30);
+  }
+
+  .btn-success:hover {
+    background: linear-gradient(135deg, #15803d, #16a34a);
+    box-shadow: 0 14px 32px rgba(34, 197, 94, 0.4);
+  }
+
+  .btn {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .toolbar-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .toolbar-hint code {
+    background: #eef2ff;
+    border-radius: 999px;
+    padding: 2px 7px;
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    font-size: 0.7rem;
+    color: var(--primary-soft);
+  }
+
+  .qr-preview-card {
+    margin-top: 16px;
+    border-radius: 16px;
+    padding: 14px 14px 12px 14px;
+    background: radial-gradient(circle at top left, rgba(219, 234, 254, 0.9) 0, #ffffff 45%, #f1f5f9 100%);
+    border: 1px solid rgba(148, 163, 184, 0.6);
+  }
+
+  .qr-box {
+    width: 180px;
+    height: 180px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #ffffff 0, #e5e7eb 65%, #cbd5f5 100%);
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    box-shadow:
+      0 14px 30px rgba(15, 23, 42, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.8);
+  }
+
+  .qr-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  #previewBarcode {
+    font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    letter-spacing: 0.12em;
+    font-size: 0.8rem;
+    color: #1f2937;
+    background: #f9fafb;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border: 1px dashed rgba(148, 163, 184, 0.9);
+  }
+
+  #previewBarcode::before {
+    content: "BARCODE";
+    font-size: 0.65rem;
+    margin-right: 8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* PRINT LABEL STYLES (unchanged in structure, kept neutral) */
+  .label {
+    width: 210mm;
+    min-height: 297mm;
+    background: #ffffff;
+    padding: 16mm;
+    box-sizing: border-box;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #111827;
+  }
+
+  .title {
+    text-align: right;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .row-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .box {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    font-size: 12.5px;
+    line-height: 1.25;
+  }
+
+  .box strong {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .w-100 { width: 100%; }
+  .w-60 { width: 60%; }
+  .w-40 { width: 40%; }
+  .w-50 { width: 50%; }
+  .w-70 { width: 70%; }
+  .w-30 { width: 30%; }
+
+  /* Keep printable content renderable (NOT hidden) */
+  #printWrapper {
+    position: fixed;
+    top: -2000px;
+    left: 0;
+    width: 210mm;
+    background: white;
+  }
+
+  /* Print rules */
+  @media print {
+    body > *:not(#printWrapper) {
+      display: none !important;
+    }
+
+    #printWrapper {
+      display: block !important;
+      position: static !important;
+    }
+
+    .label {
+      border: none;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page-wrapper">
+  <header class="app-header">
+    <div>
+      <div class="app-title">
+        Excel → QR → Parcel Label
+        <span class="app-title-badge">Smartplus Ops</span>
+      </div>
+      <div class="app-subtitle">
+        Paste a single Excel row to instantly generate a scannable QR and a printable COD parcel label.
+      </div>
+    </div>
+    <div class="text-end d-none d-md-block">
+      <div class="badge-pill-soft">
+        <span class="badge-dot"></span>
+        Live generator
+      </div>
+      <div class="toolbar-hint mt-1">
+        Use <code>Ctrl + V</code> to paste from Excel.
+      </div>
+    </div>
+  </header>
+
+  <div class="card card-main shadow-none">
+    <div class="card-body">
+      <div class="card-main-header">
+        <div class="d-md-none">
+          <div class="badge-pill-soft">
+            <span class="badge-dot"></span>
+            Live generator
+          </div>
+        </div>
+        <div class="ms-auto toolbar-hint d-none d-md-block">
+          Format:
+          <code>Order Id | Weight | Amount | Name | Contact | Address | Taluka | City | Pin | Barcode</code>
+        </div>
+      </div>
+
+      <textarea
+        id="excelInput"
+        class="form-control mb-3"
+        placeholder="Order Id | Weight | Amount | Customer Name | Contact No | Address | Taluka | City | Pin Code | Barcode">
+      </textarea>
+
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+        <button id="generateBtn" class="btn btn-primary d-inline-flex align-items-center gap-2">
+          <span>Generate QR</span>
+        </button>
+        <button id="printBtn" class="btn btn-success d-inline-flex align-items-center gap-2">
+          <span>Print Label</span>
+        </button>
+        <span class="toolbar-hint ms-md-2">
+          Tip: Validate once, then print multiple labels in sequence.
+        </span>
+      </div>
+
+      <div class="qr-preview-card text-center">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="qr-label">QR Preview</span>
+          <span class="toolbar-hint">Scan with any parcel app / camera.</span>
+        </div>
+        <div id="qrPreview" class="qr-box mb-2"></div>
+        <div id="previewBarcode" class="fw-semibold"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PRINT LAYOUT ================= -->
+<div id="printWrapper">
+  <div class="label">
+
+    <div class="title">BUSINESS PARCEL CASH ON DELIVERY</div>
+
+    <div class="row-box">
+      <div class="box w-60">
+        <strong>Sender Name:</strong>
+        Smartplus 10x Farm Solution Pvt Ltd
+        <br><strong>Sender Contact:</strong> 9325582148
+        <br><strong>Contract ID:</strong> 57775
+        <br><strong>Address:</strong>
+        Floor 8, Office 814, Global Business Hub (WTC), Kharadi, Pune - 411014
+      </div>
+
+      <div class="box w-40 text-center">
+        <strong>BARCODE / QR</strong>
+        <div id="printQr" style="margin-top:10px"></div>
+        <div id="p_barcode" style="margin-top:6px;font-size:12px"></div>
+      </div>
+    </div>
+
+    <div class="row-box">
+      <div class="box w-50"><strong>Order ID:</strong> <span id="p_orderId"></span></div>
+      <div class="box w-50"><strong>Amount:</strong> ₹<span id="p_amount"></span></div>
+    </div>
+
+    <div class="row-box">
+      <div class="box w-100"><strong>Customer Name:</strong> <span id="p_customer"></span></div>
+    </div>
+
+    <div class="row-box">
+      <div class="box w-50"><strong>Contact No:</strong> <span id="p_contact"></span></div>
+      <div class="box w-50"><strong>Taluka:</strong> <span id="p_taluka"></span></div>
+    </div>
+
+    <div class="row-box">
+      <div class="box w-100"><strong>Address:</strong> <span id="p_address"></span></div>
+    </div>
+
+    <div class="row-box">
+      <div class="box w-50"><strong>City:</strong> <span id="p_city"></span></div>
+      <div class="box w-50"><strong>Pin Code:</strong> <span id="p_pin"></span></div>
+    </div>
+
+    <div class="row-box">
+      <div class="box w-70">
+        <strong>Amount in Words:</strong>
+        <span id="p_amountWords"></span>
+      </div>
+      <div class="box w-30"><strong>Weight:</strong> <span id="p_weight"></span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const excelInput = document.getElementById("excelInput");
+  const qrPreview = document.getElementById("qrPreview");
+  const previewBarcode = document.getElementById("previewBarcode");
+  const printQr = document.getElementById("printQr");
+
+  let parsed = null;
+
+  function canvasToImage(container) {
+    const canvas = container.querySelector("canvas");
+    if (!canvas) return;
+
+    const img = document.createElement("img");
+    img.src = canvas.toDataURL("image/png");
+    img.width = 180;
+    img.height = 180;
+
+    container.innerHTML = "";
+    container.appendChild(img);
+  }
+
+  function buildQrText(p) {
+    return (
+      "OID:" + p.orderId +
+      "|NM:" + p.customer +
+      "|PH:" + p.contact +
+      "|AD:" + p.address +
+      "|TL:" + p.taluka +
+      "|CT:" + p.city +
+      "|PIN:" + p.pin +
+      "|AMT:" + p.amount +
+      "|WT:" + p.weight +
+      "|BC:" + p.barcode
+    );
+  }
+
+  function splitRow(row) {
+    return row.includes("\t")
+      ? row.split("\t").map(v => v.trim())
+      : row.split("|").map(v => v.trim());
+  }
+
+  /* ===== INR Number to Words ===== */
+  function numberToWordsINR(num) {
+    const a = [
+      "", "One", "Two", "Three", "Four", "Five", "Six",
+      "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
+      "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+      "Seventeen", "Eighteen", "Nineteen"
+    ];
+
+    const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+    if (num === 0) return "Zero Rupees Only";
+
+    function inWords(n) {
+      if (n < 20) return a[n];
+      if (n < 100) return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
+      if (n < 1000) return a[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + inWords(n % 100) : "");
+      if (n < 100000) return inWords(Math.floor(n / 1000)) + " Thousand" + (n % 1000 ? " " + inWords(n % 1000) : "");
+      if (n < 10000000) return inWords(Math.floor(n / 100000)) + " Lakh" + (n % 100000 ? " " + inWords(n % 100000) : "");
+      return inWords(Math.floor(n / 10000000)) + " Crore" + (n % 10000000 ? " " + inWords(n % 10000000) : "");
+    }
+
+    return inWords(num) + " Rupees Only";
+  }
+
+  document.getElementById("generateBtn").onclick = () => {
+    qrPreview.innerHTML = "";
+    previewBarcode.innerText = "";
+
+    const raw = excelInput.value.trim();
+    if (!raw) return alert("Paste Excel row");
+
+    const cols = splitRow(raw);
+    if (cols.length !== 10) return alert("Invalid format. Expected 10 columns.");
+
+    parsed = {
+      orderId: cols[0],
+      weight: cols[1],
+      amount: cols[2],
+      customer: cols[3],
+      contact: cols[4],
+      address: cols[5],
+      taluka: cols[6],
+      city: cols[7],
+      pin: cols[8],
+      barcode: cols[9],
+    };
+
+    console.clear();
+    console.log("Parsed:", parsed);
+
+    try {
+      requestAnimationFrame(() => {
+        new QRCode(qrPreview, {
+          text: buildQrText(parsed),
+          width: 180,
+          height: 180,
+          correctLevel: QRCode.CorrectLevel.L
+        });
+
+        setTimeout(() => {
+          canvasToImage(qrPreview);
+        }, 50);
+      });
+    } catch (e) {
+      console.error("QR error:", e);
+      alert("QR generation error: " + e.message);
+    }
+
+    previewBarcode.innerText = parsed.barcode;
+  };
+
+  document.getElementById("printBtn").onclick = () => {
+    if (!parsed) return alert("Generate QR first");
+
+    document.getElementById("p_orderId").innerText = parsed.orderId;
+    document.getElementById("p_amount").innerText = parsed.amount;
+    document.getElementById("p_customer").innerText = parsed.customer;
+    document.getElementById("p_contact").innerText = parsed.contact;
+    document.getElementById("p_address").innerText = parsed.address;
+    document.getElementById("p_taluka").innerText = parsed.taluka;
+    document.getElementById("p_city").innerText = parsed.city;
+    document.getElementById("p_pin").innerText = parsed.pin;
+    document.getElementById("p_weight").innerText = parsed.weight;
+    document.getElementById("p_barcode").innerText = parsed.barcode;
+
+    document.getElementById("p_amountWords").innerText =
+      numberToWordsINR(parseInt(parsed.amount, 10));
+
+    printQr.innerHTML = "";
+    const printQrNode = document.createElement("div");
+    printQr.appendChild(printQrNode);
+
+    try {
+      requestAnimationFrame(() => {
+        new QRCode(printQrNode, {
+          text: buildQrText(parsed),
+          width: 180,
+          height: 180,
+          correctLevel: QRCode.CorrectLevel.L
+        });
+
+        setTimeout(() => {
+          canvasToImage(printQr);
+          window.print();
+        }, 100);
+      });
+    } catch (e) {
+      console.error("Print QR error:", e);
+      alert("Print QR generation error: " + e.message);
+    }
+  };
+</script>
+
+</body>
+</html>
