@@ -7,8 +7,8 @@
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<!-- QR Code -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- JsBarcode for 1D barcodes -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
 <style>
   :root {
@@ -191,14 +191,14 @@
   }
 
   .qr-box {
-    width: 180px;
-    height: 180px;
+    width: 260px;
+    height: 120px;
     margin: auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at center, #ffffff 0, #e5e7eb 65%, #cbd5f5 100%);
-    border-radius: 18px;
+    background: #ffffff;
+    border-radius: 12px;
     border: 1px solid rgba(148, 163, 184, 0.6);
     box-shadow:
       0 14px 30px rgba(15, 23, 42, 0.08),
@@ -233,7 +233,7 @@
     color: var(--text-muted);
   }
 
-  /* PRINT LABEL STYLES (unchanged in structure, kept neutral) */
+  /* PRINT LABEL STYLES */
   .label {
     width: 210mm;
     min-height: 297mm;
@@ -287,6 +287,12 @@
     background: white;
   }
 
+  /* Make print barcode SVG fit inside the box */
+  #printQr svg {
+    max-width: 100%;
+    height: auto;
+  }
+
   /* Print rules */
   @media print {
     body > *:not(#printWrapper) {
@@ -315,7 +321,7 @@
         <span class="app-title-badge">Smartplus Ops</span>
       </div>
       <div class="app-subtitle">
-        Paste a single Excel row to instantly generate a scannable QR and a printable COD parcel label.
+        Paste a single Excel row to instantly generate a scannable barcode and a printable COD parcel label.
       </div>
     </div>
     <div class="text-end d-none d-md-block">
@@ -352,7 +358,7 @@
 
       <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
         <button id="generateBtn" class="btn btn-primary d-inline-flex align-items-center gap-2">
-          <span>Generate QR</span>
+          <span>Generate Barcode</span>
         </button>
         <button id="printBtn" class="btn btn-success d-inline-flex align-items-center gap-2">
           <span>Print Label</span>
@@ -364,10 +370,12 @@
 
       <div class="qr-preview-card text-center">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="qr-label">QR Preview</span>
-          <span class="toolbar-hint">Scan with any parcel app / camera.</span>
+          <span class="qr-label">Barcode Preview</span>
+          <span class="toolbar-hint">Scan with any parcel app / scanner.</span>
         </div>
-        <div id="qrPreview" class="qr-box mb-2"></div>
+        <div id="qrPreview" class="qr-box mb-2">
+          <!-- SVG barcode will be inserted here -->
+        </div>
         <div id="previewBarcode" class="fw-semibold"></div>
       </div>
     </div>
@@ -391,7 +399,7 @@
       </div>
 
       <div class="box w-40 text-center">
-        <strong>BARCODE / QR</strong>
+        <strong>BARCODE</strong>
         <div id="printQr" style="margin-top:10px"></div>
         <div id="p_barcode" style="margin-top:6px;font-size:12px"></div>
       </div>
@@ -400,6 +408,15 @@
     <div class="row-box">
       <div class="box w-50"><strong>Order ID:</strong> <span id="p_orderId"></span></div>
       <div class="box w-50"><strong>Amount:</strong> ₹<span id="p_amount"></span></div>
+    </div>
+
+    <!-- Amount in Words + Weight ABOVE Customer Name -->
+    <div class="row-box">
+      <div class="box w-70">
+        <strong>Amount in Words:</strong>
+        <span id="p_amountWords"></span>
+      </div>
+      <div class="box w-30"><strong>Weight:</strong> <span id="p_weight"></span></div>
     </div>
 
     <div class="row-box">
@@ -420,14 +437,6 @@
       <div class="box w-50"><strong>Pin Code:</strong> <span id="p_pin"></span></div>
     </div>
 
-    <div class="row-box">
-      <div class="box w-70">
-        <strong>Amount in Words:</strong>
-        <span id="p_amountWords"></span>
-      </div>
-      <div class="box w-30"><strong>Weight:</strong> <span id="p_weight"></span></div>
-    </div>
-
   </div>
 </div>
 
@@ -438,19 +447,6 @@
   const printQr = document.getElementById("printQr");
 
   let parsed = null;
-
-  function canvasToImage(container) {
-    const canvas = container.querySelector("canvas");
-    if (!canvas) return;
-
-    const img = document.createElement("img");
-    img.src = canvas.toDataURL("image/png");
-    img.width = 180;
-    img.height = 180;
-
-    container.innerHTML = "";
-    container.appendChild(img);
-  }
 
   function buildQrText(p) {
     return (
@@ -524,29 +520,29 @@
     console.clear();
     console.log("Parsed:", parsed);
 
+    // Generate preview barcode (using barcode value)
     try {
-      requestAnimationFrame(() => {
-        new QRCode(qrPreview, {
-          text: buildQrText(parsed),
-          width: 180,
-          height: 180,
-          correctLevel: QRCode.CorrectLevel.L
-        });
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      qrPreview.appendChild(svg);
 
-        setTimeout(() => {
-          canvasToImage(qrPreview);
-        }, 50);
+      JsBarcode(svg, parsed.barcode, {
+        format: "CODE128",
+        width: 1,      // narrower
+        height: 55,    // slightly shorter
+        displayValue: true,
+        fontSize: 12,
+        margin: 2
       });
     } catch (e) {
-      console.error("QR error:", e);
-      alert("QR generation error: " + e.message);
+      console.error("Barcode error:", e);
+      alert("Barcode generation error: " + e.message);
     }
 
     previewBarcode.innerText = parsed.barcode;
   };
 
   document.getElementById("printBtn").onclick = () => {
-    if (!parsed) return alert("Generate QR first");
+    if (!parsed) return alert("Generate Barcode first");
 
     document.getElementById("p_orderId").innerText = parsed.orderId;
     document.getElementById("p_amount").innerText = parsed.amount;
@@ -563,26 +559,23 @@
       numberToWordsINR(parseInt(parsed.amount, 10));
 
     printQr.innerHTML = "";
-    const printQrNode = document.createElement("div");
-    printQr.appendChild(printQrNode);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    printQr.appendChild(svg);
 
     try {
-      requestAnimationFrame(() => {
-        new QRCode(printQrNode, {
-          text: buildQrText(parsed),
-          width: 180,
-          height: 180,
-          correctLevel: QRCode.CorrectLevel.L
-        });
-
-        setTimeout(() => {
-          canvasToImage(printQr);
-          window.print();
-        }, 100);
+      JsBarcode(svg, parsed.barcode, {
+        format: "CODE128",
+        width: 1,      // narrower for print
+        height: 50,    // shorter for print box
+        displayValue: true,
+        fontSize: 10,
+        margin: 2
       });
+
+      window.print();
     } catch (e) {
-      console.error("Print QR error:", e);
-      alert("Print QR generation error: " + e.message);
+      console.error("Print barcode error:", e);
+      alert("Print barcode generation error: " + e.message);
     }
   };
 </script>
