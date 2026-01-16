@@ -233,41 +233,42 @@
     color: var(--text-muted);
   }
 
-  /* PRINT LABEL STYLES */
+  /* PRINT LABEL STYLES for A5 landscape */
   .label {
-    width: 210mm;
-    min-height: 297mm;
+    width: 210mm;          /* A5 landscape: 210mm wide */
+    min-height: 148mm;     /* A5 landscape: 148mm tall */
     background: #ffffff;
-    padding: 16mm;
+    padding: 10mm;         /* a bit smaller padding for A5 */
     box-sizing: border-box;
-    font-size: 13px;
+    font-size: 11px;       /* slightly smaller to fit */
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: #111827;
   }
 
   .title {
-    text-align: right;
+    text-align: center;    /* center title */
     font-weight: 700;
-    font-size: 18px;
-    margin-bottom: 12px;
+    font-size: 24px;       /* approximate h1 size in print */
+    margin-bottom: 10px;
+    text-transform: uppercase;
   }
 
   .row-box {
     display: flex;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: 6px;
+    margin-bottom: 4px;
   }
 
   .box {
     border: 1px solid #000;
-    padding: 6px 8px;
-    font-size: 12.5px;
+    padding: 4px 6px;
+    font-size: 11px;
     line-height: 1.25;
   }
 
   .box strong {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     margin-bottom: 2px;
   }
 
@@ -293,6 +294,12 @@
     height: auto;
   }
 
+  /* Force A5 landscape page size for print */
+  @page {
+    size: A5 landscape;
+    margin: 0;
+  }
+
   /* Print rules */
   @media print {
     body > *:not(#printWrapper) {
@@ -302,6 +309,10 @@
     #printWrapper {
       display: block !important;
       position: static !important;
+    }
+
+    body {
+      background: #ffffff;
     }
 
     .label {
@@ -400,8 +411,8 @@
 
       <div class="box w-40 text-center">
         <strong>BARCODE</strong>
-        <div id="printQr" style="margin-top:10px"></div>
-        <div id="p_barcode" style="margin-top:6px;font-size:12px"></div>
+        <div id="printQr" style="margin-top:8px"></div>
+        <div id="p_barcode" style="margin-top:4px;font-size:11px"></div>
       </div>
     </div>
 
@@ -527,8 +538,8 @@
 
       JsBarcode(svg, parsed.barcode, {
         format: "CODE128",
-        width: 1,      // narrower
-        height: 55,    // slightly shorter
+        width: 1,
+        height: 55,
         displayValue: true,
         fontSize: 12,
         margin: 2
@@ -565,8 +576,8 @@
     try {
       JsBarcode(svg, parsed.barcode, {
         format: "CODE128",
-        width: 1,      // narrower for print
-        height: 50,    // shorter for print box
+        width: 1,
+        height: 50,
         displayValue: true,
         fontSize: 10,
         margin: 2
