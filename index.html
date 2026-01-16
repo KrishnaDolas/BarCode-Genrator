@@ -411,7 +411,8 @@
         Floor 8, Office 814, Global Business Hub (WTC), Kharadi, Pune - 411014
       </div>
 
-      <div class="box w-40 text-center" style="padding-left:0;padding-right:0;">
+      <!-- 4px padding on left/right inside the barcode box -->
+      <div class="box w-40 text-center" style="padding-left:4px;padding-right:4px;">
         <strong>BARCODE</strong>
         <div id="printQr" style="margin-top:2px;width:100%;"></div>
         <div id="p_barcode" style="margin-top:1px;font-size:13px;"></div>
@@ -576,14 +577,17 @@
     printQr.appendChild(svg);
 
     try {
-      // Increased height barcode, still max width and within A5
+      // Max width barcode with 4px inner gap from box border
       JsBarcode(svg, parsed.barcode, {
         format: "CODE128",
-        width: 3,      // wide bars
-        height: 70,    // increased height
+        width: 3,        // wide bars
+        height: 70,      // increased height
         displayValue: true,
         fontSize: 13,
-        margin: 0
+        marginLeft: 4,   // 4px quiet zone on left
+        marginRight: 4,  // 4px quiet zone on right
+        marginTop: 0,
+        marginBottom: 0
       });
 
       window.print();
